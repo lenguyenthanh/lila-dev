@@ -1,0 +1,128 @@
+services:
+
+  redis:
+    image: redis:6-alpine
+    container_name: lila_redis
+    networks:
+      - lila-network
+    ports:
+      - 6379:6379
+    profiles:
+      - infra
+      - ws
+      - stockfish-play
+
+  mongo:
+    image: mongo:5.0
+    restart: unless-stopped
+    container_name: lila_mongo
+    networks:
+      - lila-network
+    ports:
+      - 27017:27017
+    profiles:
+      - infra
+      - ws
+    volumes:
+      # use `docker exec -it lila_mongo bash` to get a shell inside mongo
+      # container. Directory containing this docker-compose.yml will be mounted
+      # as /host inside container so you can import db dumps, etc.
+      - .:/host
+      - data-mongo:/data/db
+
+  influx:
+    image: influxdb:2.7-alpine
+    restart: unless-stopped
+    container_name: lila_influx
+    networks:
+      - lila-network
+    ports:
+      - 8086:8086
+    volumes:
+      - data-influx:/var/lib/influxdb2
+    profiles:
+      - monitor
+
+  elasticsearch:
+    image: elasticsearch:7.17.4
+    container_name: lila_elastic_search
+    networks:
+      - lila-network
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - http.cors.allow-origin=/.*/
+      - http.cors.enabled=true
+      - xpack.security.enabled=false
+    volumes:
+      - data-elasticsearch:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    profiles:
+      - infra
+      - search
+
+  elasticvue:
+    image: cars10/elasticvue:1.0.7
+    restart: unless-stopped
+    volumes:
+      - ./conf/elasticvue.json:/usr/share/nginx/html/api/default_clusters.json
+    ports:
+      - 8092:8080
+    networks:
+      - lila-network
+    profiles:
+      - search
+
+  lila-ws:
+    image: ghcr.io/lichess-org/lila-ws:latest
+    container_name: lila_ws
+    networks:
+      - lila-network
+    environment:
+      - CONFIG_FORCE_mongo_uri=mongodb://mongo:27017/lichess?appName=lila-ws
+      - CONFIG_FORCE_redis.uri=redis://redis:6379
+    ports:
+      - 9664:9664
+    restart: unless-stopped
+    depends_on:
+      - mongo
+      - redis
+    profiles:
+      - ws
+
+  fishnet-play:
+    image: niklasf/fishnet:2.9.2
+    container_name: lila_fishnet_play
+    restart: unless-stopped
+    entrypoint: /fishnet --endpoint http://lila_fishnet:9665/fishnet --max-backoff 5
+    networks:
+      - lila-network
+    profiles:
+      - stockfish-play
+
+  lila-fishnet:
+    image: ghcr.io/lichess-org/lila-fishnet:latest
+    container_name: lila_fishnet
+    environment:
+      - APP_BACKUP_FILE=/backup.json
+      - CONFIG_FORCE_kamon_influxdb_authentication_token=secret
+      - CONFIG_FORCE_kamon_influxdb_hostname=influxdb
+      - REDIS_HOST=redis
+    restart: unless-stopped
+    networks:
+      - lila-network
+    profiles:
+      - stockfish-play
+    depends_on:
+      - redis
+
+volumes:
+  data-mongo:
+  data-influx:
+  data-elasticsearch:
+  conf:
+
+networks:
+  lila-network:
+    driver: bridge
