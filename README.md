@@ -4,6 +4,14 @@ My custom lichess development environment.
 
 ## Usage
 
+Start everything:
+
+```bash
+COMPOSE_PROFILES=all docker compose up -d
+```
+
+Or you can start only the services you need:
+
 Start infra services (redis, postgres, etc) with:
 
 ```bash
@@ -24,8 +32,6 @@ If you're working on lila-ws, then stop it
 docker compose down lila-ws
 ```
 
-## Optional
-
 Enable fishnet play:
 
 ```bash
@@ -37,7 +43,6 @@ docker compose up -d lila-fishnet
 Stop them:
 
 ```bash
-docker compose down fishnet-play
-docker compose down lila-fishnet
+COMPOSE_PROFILES=all docker compose down
 ```
 

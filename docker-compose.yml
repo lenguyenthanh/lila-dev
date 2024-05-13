@@ -8,6 +8,7 @@ services:
     ports:
       - 6379:6379
     profiles:
+      - all
       - infra
       - ws
       - stockfish-play
@@ -21,6 +22,7 @@ services:
     ports:
       - 27017:27017
     profiles:
+      - all
       - infra
       - ws
     volumes:
@@ -59,11 +61,13 @@ services:
     ports:
       - 9200:9200
     profiles:
+      - all
       - infra
       - search
 
   elasticvue:
     image: cars10/elasticvue:1.0.7
+    container_name: lila_elasticvue
     restart: unless-stopped
     volumes:
       - ./conf/elasticvue.json:/usr/share/nginx/html/api/default_clusters.json
@@ -72,6 +76,7 @@ services:
     networks:
       - lila-network
     profiles:
+      - all
       - search
 
   lila-ws:
@@ -89,6 +94,7 @@ services:
       - mongo
       - redis
     profiles:
+      - all
       - ws
 
   fishnet-play:
@@ -99,6 +105,7 @@ services:
     networks:
       - lila-network
     profiles:
+      - all
       - stockfish-play
 
   lila-fishnet:
@@ -113,6 +120,7 @@ services:
     networks:
       - lila-network
     profiles:
+      - all
       - stockfish-play
     depends_on:
       - redis
