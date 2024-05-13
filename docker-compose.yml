@@ -65,6 +65,20 @@ services:
       - infra
       - search
 
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.4
+    container_name: lila_kibana
+    restart: unless-stopped
+    ports:
+      - 5601:5601
+    networks:
+      - lila-network
+    volumes:
+      - ./kibana.yml:/usr/share/kibana/config/kibana.yml
+    profiles:
+      - all
+      - search
+
   elasticvue:
     image: cars10/elasticvue:1.0.7
     container_name: lila_elasticvue
