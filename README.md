@@ -2,6 +2,30 @@
 
 My custom lichess development environment.
 
+## Presquisites
+
+- Docker
+- JDK 21
+- sbt
+
+### Build some images
+
+build `lila-ws` image:
+
+```bash
+git clone git@github.com:lenguyenthanh/lila-ws.git
+cd lila-ws
+sbt Docker/publishLocal
+```
+
+build `lila-fishnet` image:
+
+```bash
+git clone git@github.com:lichess-org/lila-fishnet.git
+cd lila-fishnet
+sbt Docker/publishLocal
+```
+
 ## Usage
 
 Start everything:
