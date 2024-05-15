@@ -13,7 +13,7 @@ My custom lichess development environment.
 build `lila-ws` image:
 
 ```bash
-git clone git@github.com:lenguyenthanh/lila-ws.git
+git clone --single-branch --branch support-build-local-docker-image git@github.com:lenguyenthanh/lila-ws.git
 cd lila-ws
 sbt Docker/publishLocal
 ```
