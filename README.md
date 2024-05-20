@@ -8,21 +8,11 @@ My custom lichess development environment.
 - JDK 21
 - sbt
 
-### Build some images
-
-build `lila-ws` image:
+### Build lila-ws docker image
 
 ```bash
 git clone --single-branch --branch support-build-local-docker-image git@github.com:lenguyenthanh/lila-ws.git
 cd lila-ws
-sbt Docker/publishLocal
-```
-
-build `lila-fishnet` image:
-
-```bash
-git clone git@github.com:lichess-org/lila-fishnet.git
-cd lila-fishnet
 sbt Docker/publishLocal
 ```
 
