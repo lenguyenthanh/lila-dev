@@ -6,15 +6,6 @@ My custom lichess development environment.
 
 - Docker
 - JDK 21
-- sbt
-
-### Build lila-ws docker image
-
-```bash
-git clone --single-branch --branch support-build-local-docker-image git@github.com:lenguyenthanh/lila-ws.git
-cd lila-ws
-sbt Docker/publishLocal
-```
 
 ## Usage
 
@@ -59,4 +50,3 @@ Stop them:
 ```bash
 COMPOSE_PROFILES=all docker compose down
 ```
-
