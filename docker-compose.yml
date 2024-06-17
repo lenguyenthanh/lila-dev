@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     command: mongod --bind_ip_all --replSet rs0
     healthcheck:
-      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017',priority:1},{_id:1,host:'mongo-secondary0:27017',priority:0.5},{_id:2,host:'mongo-secondary1:27017',priority:0.5}]}) }" | mongosh --quiet
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017',priority:1},{_id:1,host:'mongo-secondary:27017',priority:0.5}]}) }" | mongosh --quiet
       interval: 5s
       timeout: 30s
       start_period: 0s
@@ -22,10 +22,8 @@ services:
     profiles:
       - all
       - infra
+      - ingestor
       - ws
-    # depends_on:
-    #   - mongo-secondary0
-    #   - mongo-secondary1
     volumes:
       # use `docker exec -it lila_mongo bash` to get a shell inside mongo
       # container. Directory containing this docker-compose.yml will be mounted
@@ -33,37 +31,22 @@ services:
       - .:/host
       - data-mongo:/data/db
 
-  mongo-secondary0:
+  mongo-secondary:
     image: mongo:5.0
-    container_name: lila_mongo_secondary0
+    container_name: lila_mongo_secondary
     command: mongod --bind_ip_all --replSet rs0
     networks:
       lila-network:
         aliases:
-          - mongo-secondary0.localhost
+          - mongo-secondary.localhost
         ipv4_address: 172.22.0.3
+    depends_on:
+      - mongo
     ports:
       - 27018:27017
     profiles:
       - all
-      - infra
-      - ws
-
-  mongo-secondary1:
-    image: mongo:5.0
-    container_name: lila_mongo_secondary1
-    command: mongod --bind_ip_all --replSet rs0
-    networks:
-      lila-network:
-        aliases:
-          - mongo-secondary1.localhost
-        ipv4_address: 172.22.0.4
-    ports:
-      - 27019:27017
-    profiles:
-      - all
-      - infra
-      - ws
+      - ingestor
 
   redis:
     image: redis:6-alpine
@@ -118,6 +101,7 @@ services:
     profiles:
       - all
       - infra
+      - ingestor
       - search
 
   kibana:
