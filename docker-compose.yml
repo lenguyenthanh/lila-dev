@@ -22,7 +22,6 @@ services:
     profiles:
       - all
       - infra
-      - ingestor
       - ws
     volumes:
       # use `docker exec -it lila_mongo bash` to get a shell inside mongo
@@ -46,7 +45,7 @@ services:
       - 27018:27017
     profiles:
       - all
-      - ingestor
+      - infra
 
   redis:
     image: redis:6-alpine
@@ -101,7 +100,6 @@ services:
     profiles:
       - all
       - infra
-      - ingestor
       - search
 
   kibana:
