@@ -103,7 +103,7 @@ services:
       - search
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.17.4
+    image: docker.elastic.co/kibana/kibana:7.10.1
     container_name: lila_kibana
     restart: unless-stopped
     ports:
@@ -115,23 +115,6 @@ services:
         ipv4_address: 172.22.0.8
     volumes:
       - ./conf/kibana.yml:/usr/share/kibana/config/kibana.yml
-    profiles:
-      - all
-      - search
-
-  elasticvue:
-    image: cars10/elasticvue:1.0.7
-    container_name: lila_elasticvue
-    restart: unless-stopped
-    volumes:
-      - ./conf/elasticvue.json:/usr/share/nginx/html/api/default_clusters.json
-    ports:
-      - 8092:8080
-    networks:
-      lila-network:
-        aliases:
-          - elasticvue.localhost
-        ipv4_address: 172.22.0.9
     profiles:
       - all
       - search
