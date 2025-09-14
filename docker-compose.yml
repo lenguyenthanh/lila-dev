@@ -24,6 +24,7 @@ services:
       - infra
       - ws
       - stockfish-play
+      - lila-search
     volumes:
       # use `docker exec -it lila_mongo bash` to get a shell inside mongo
       # container. Directory containing this docker-compose.yml will be mounted
@@ -49,6 +50,7 @@ services:
       - infra
       - ws
       - stockfish-play
+      - lila-search
 
   redis:
     image: redis:6-alpine
@@ -119,6 +121,7 @@ services:
       - all
       - infra
       - search
+      - lila-search
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.10.1
@@ -135,7 +138,6 @@ services:
       - ./conf/kibana.yml:/usr/share/kibana/config/kibana.yml
     profiles:
       - all
-      - search
 
   elasticvue:
     image: cars10/elasticvue:1.0.7
@@ -152,7 +154,6 @@ services:
         ipv4_address: 172.22.0.9
     profiles:
       - all
-      - search
 
   lila-ws:
     image: ghcr.io/lichess-org/lila-ws:latest
@@ -216,6 +217,81 @@ services:
       - redis
       - mongo
       - lila-ws
+
+  lila-search-app:
+    image: ghcr.io/lichess-org/lila-search-app:3.2.2
+    container_name: lila_search_app
+    ports:
+      - "9674:9674"
+    volumes:
+      - ./logs:/opt/docker/logs:rw
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/?readPreference=secondary
+      - MONGO_DATABASE=lichess
+      - MONGO_STUDY_URI=mongodb://mongo:27017
+      - MONGO_STUDY_DATABASE=lichess
+      - ELASTIC_URI=http://elasticsearch:9200
+      - HTTP_SHUTDOWN_TIMEOUT=1
+      - HTTP_ENABLE_DOCS=true
+      - HTTP_PORT=9674
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=none
+      - OTEL_EXPORTER_PROMETHEUS_HOST=0.0.0.0
+      - OTEL_EXPORTER_PROMETHEUS_PORT=9465
+    restart: unless-stopped
+    networks:
+      lila-network:
+        aliases:
+          - lila-search-app.localhost
+        ipv4_address: 172.22.0.13
+    profiles:
+      - all
+      - lila-search
+    depends_on:
+      - mongo
+      - elasticsearch
+
+  lila-search-ingestor:
+    image: ghcr.io/lichess-org/lila-search-ingestor-app:3.2.2
+    container_name: lila_search_ingestor_app
+    volumes:
+      - ./logs:/opt/docker/logs:rw
+      - ./lila_search_ingestor_store.json:/opt/docker/store.json:rw
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/?readPreference=secondary
+      - MONGO_DATABASE=lichess
+      - MONGO_STUDY_URI=mongodb://mongo:27017
+      - MONGO_STUDY_DATABASE=lichess
+      - ELASTIC_URI=http://elasticsearch:9200
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=none
+      - OTEL_EXPORTER_PROMETHEUS_HOST=0.0.0.0
+      - OTEL_EXPORTER_PROMETHEUS_PORT=9465
+
+      - INGESTOR_FORUM_TIME_WINDOWS=1
+      - INGESTOR_FORUM_MAX_POST_LENGTH=5000
+
+      - INGESTOR_TEAM_TIME_WINDOWS=1
+
+      - INGESTOR_STUDY_BATCH_SIZE=100
+      - INGESTOR_STUDY_INTERVAL=30
+
+      - INGESTOR_GAME_BATCH_SIZE=100
+      - INGESTOR_GAME_TIME_WINDOWS=2
+      - INGESTOR_GAME_START_AT=0
+
+    restart: unless-stopped
+    networks:
+      lila-network:
+        aliases:
+          - lila-search-ingestor-app.localhost
+        ipv4_address: 172.22.0.14
+    profiles:
+      - all
+      - lila-search
+    depends_on:
+      - mongo
+      - elasticsearch
 
 volumes:
   data-mongo:
