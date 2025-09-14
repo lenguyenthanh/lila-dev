@@ -23,6 +23,7 @@ services:
       - all
       - infra
       - ws
+      - stockfish-play
     volumes:
       # use `docker exec -it lila_mongo bash` to get a shell inside mongo
       # container. Directory containing this docker-compose.yml will be mounted
@@ -46,6 +47,8 @@ services:
     profiles:
       - all
       - infra
+      - ws
+      - stockfish-play
 
   redis:
     image: redis:6-alpine
@@ -76,6 +79,21 @@ services:
       - 8086:8086
     volumes:
       - data-influx:/var/lib/influxdb2
+    profiles:
+      - monitor
+
+  prometheus:
+    image: prom:/prometheus:v2.55.1
+    volumes:
+     - ./conf/prometheus.yml:/etc/prometheus/prometheus.yml
+     - prometheus_data:/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yml
+    networks:
+      lila-network:
+        aliases:
+          - prometheus.localhost
+    ports:
+     - 9090:9090
     profiles:
       - monitor
 
@@ -138,12 +156,15 @@ services:
 
   lila-ws:
     image: ghcr.io/lichess-org/lila-ws:latest
+    platform: linux/amd64
     container_name: lila_ws
     networks:
       lila-network:
         aliases:
           - lila-ws.localhost
         ipv4_address: 172.22.0.10
+    volumes:
+      - ./logs/lila-ws-error.log:/opt/docker/logs/error.log
     environment:
       - CONFIG_FORCE_mongo_uri=mongodb://mongo:27017/lichess?appName=lila-ws
       - CONFIG_FORCE_redis.uri=redis://redis:6379
@@ -156,6 +177,7 @@ services:
     profiles:
       - all
       - ws
+      - stockfish-play
 
   fishnet-play:
     image: niklasf/fishnet:2.9.2
@@ -172,8 +194,10 @@ services:
       - stockfish-play
 
   lila-fishnet:
-    image: ghcr.io/lichess-org/lila-fishnet:latest
+    image: ghcr.io/lichess-org/lila-fishnet:3.0.11
     container_name: lila_fishnet
+    volumes:
+      - ./logs:/opt/docker/logs:rw
     environment:
       - APP_BACKUP_FILE=/backup.json
       - CONFIG_FORCE_kamon_influxdb_authentication_token=secret
@@ -190,12 +214,16 @@ services:
       - stockfish-play
     depends_on:
       - redis
+      - mongo
+      - lila-ws
 
 volumes:
   data-mongo:
   data-influx:
   data-elasticsearch:
   conf:
+  prometheus_data: {}
+  logs:
 
 networks:
   lila-network:
@@ -205,3 +233,4 @@ networks:
       config:
         - subnet: 172.22.0.0/16
           gateway: 172.22.0.254
+
