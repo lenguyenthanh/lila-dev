@@ -224,7 +224,7 @@ services:
     ports:
       - "9674:9674"
     volumes:
-      - ./logs:/opt/docker/logs:rw
+      - ./conf/logback.xml:/opt/config/logback.xml
     environment:
       - MONGO_URI=mongodb://mongo:27017/?readPreference=secondary
       - MONGO_DATABASE=lichess
@@ -238,6 +238,7 @@ services:
       - OTEL_TRACES_EXPORTER=none
       - OTEL_EXPORTER_PROMETHEUS_HOST=0.0.0.0
       - OTEL_EXPORTER_PROMETHEUS_PORT=9465
+      - JAVA_TOOL_OPTIONS=-Dlogback.configurationFile=/opt/config/logback.xml
     restart: unless-stopped
     networks:
       lila-network:
@@ -255,7 +256,7 @@ services:
     image: ghcr.io/lichess-org/lila-search-ingestor-app:3.2.2
     container_name: lila_search_ingestor_app
     volumes:
-      - ./logs:/opt/docker/logs:rw
+      - ./conf/logback.xml:/opt/config/logback.xml
       - ./lila_search_ingestor_store.json:/opt/docker/store.json:rw
     environment:
       - MONGO_URI=mongodb://mongo:27017/?readPreference=secondary
@@ -279,6 +280,8 @@ services:
       - INGESTOR_GAME_BATCH_SIZE=100
       - INGESTOR_GAME_TIME_WINDOWS=2
       - INGESTOR_GAME_START_AT=0
+
+      - JAVA_TOOL_OPTIONS=-Dlogback.configurationFile=/opt/config/logback.xml
 
     restart: unless-stopped
     networks:
