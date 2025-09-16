@@ -253,11 +253,10 @@ services:
       - elasticsearch
 
   lila-search-ingestor:
-    image: ghcr.io/lichess-org/lila-search-ingestor-app:3.2.2
+    image: ghcr.io/lichess-org/lila-search-ingestor-app:3.2.3-SNAPSHOT
     container_name: lila_search_ingestor_app
     volumes:
       - ./conf/logback.xml:/opt/config/logback.xml
-      - ./lila_search_ingestor_store.json:/opt/docker/store.json:rw
     environment:
       - MONGO_URI=mongodb://mongo:27017/?readPreference=secondary
       - MONGO_DATABASE=lichess
@@ -282,6 +281,7 @@ services:
       - INGESTOR_GAME_START_AT=0
 
       - JAVA_TOOL_OPTIONS=-Dlogback.configurationFile=/opt/config/logback.xml
+      - KV_STORE_PATH=/tmp/json.store
 
     restart: unless-stopped
     networks:
